@@ -78,11 +78,10 @@
       // draw dots
       svg.selectAll(".dot")
           .data(data, (d,i)=>`${r}:${i}`)
-          .join(
-                enter => enter.call(console.log),
-                update => update.call(console.log),
-                exit => update.call(console.log),
-            )
+          .join(enter => enter.append("circle"))
+          .attr("cx", xScale)
+          .attr("cy", yScale)
+          .attr("r",2)
     }
     
    let worker = new Worker("./worker.js")
