@@ -85,7 +85,7 @@
           .style("fill", function(d) { return color(cValue(d));})
     }
         let worker = new Worker("./worker.js")
-    for(let r = 0; r <= 4; r += 0.001){
+    for(let r = 0; r < 4; r += 0.001){
         worker.postMessage(r)
         worker.onmessage = draw
     }
