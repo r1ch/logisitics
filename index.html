@@ -72,19 +72,27 @@
           .style("text-anchor", "end")
           .text("r");
     
-    const draw = (data)=>{
-        console.log(data)
+    const draw = (message)=>{
+      let data = [...message.data];
+      let r = data.shift();
       // draw dots
       svg.selectAll(".dot")
-          .data(data)
-        .enter().append("circle")
-          .attr("class", "dot")
-          .attr("r", 3.5)
-          .attr("cx", xMap)
-          .attr("cy", yMap)
-          .style("fill", function(d) { return color(cValue(d));})
+          .data(data, d=>r)
+          .join(
+            enter=>enter
+                .append("circle")
+                .attr("class","dot)
+                .attr("r", 3.5)
+                .attr("cx", xMap)
+                .attr("cy", yMap)
+                .style("fill", function(d) { return color(cValue(d));}),
+          update=>update,
+          remove=>remove)
+
     }
-        let worker = new Worker("./worker.js")
+    
+   let worker = new Worker("./worker.js")
+        
     for(let r = 0; r < 4; r += 0.001){
         worker.postMessage(r)
         worker.onmessage = draw
