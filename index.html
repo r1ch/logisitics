@@ -79,16 +79,10 @@
       svg.selectAll(".dot")
           .data(data, (d,i)=>`${r}:${i}`)
           .join(
-            enter=>enter
-                .append("circle")
-                .attr("class","dot")
-                .attr("r", 3.5)
-                .attr("cx", r)
-                .attr("cy", d=>d)
-                .style("fill", function(d) { return color(cValue(d));}),
-          update=>update,
-          remove=>remove)
-
+                enter => enter.call(console.log),
+                update => update.call(console.log),
+                exit => update.call(console.log),
+            )
     }
     
    let worker = new Worker("./worker.js")
