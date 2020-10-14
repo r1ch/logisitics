@@ -77,14 +77,14 @@
       let r = data.shift();
       // draw dots
       svg.selectAll(".dot")
-          .data(data, d=>r)
+          .data(data, (d,i)=>`${r}:${i}`)
           .join(
             enter=>enter
                 .append("circle")
                 .attr("class","dot")
                 .attr("r", 3.5)
-                .attr("cx", xMap)
-                .attr("cy", yMap)
+                .attr("cx", r)
+                .attr("cy", d=>d)
                 .style("fill", function(d) { return color(cValue(d));}),
           update=>update,
           remove=>remove)
