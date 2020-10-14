@@ -45,8 +45,8 @@
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
-      xScale.domain(0, 4);
-      yScale.domain(0, 1);
+      xScale.domain([0, 4]);
+      yScale.domain([0, 1]);
     
       // x-axis
       svg.append("g")
