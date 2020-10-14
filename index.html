@@ -1,0 +1,7 @@
+<script type = "application/javascript">
+    for(let r = 0; r <= 4; r += 0.001){
+        let worker = new Worker("./worker.js")
+        worker.postMessage(r)
+        worker.onMessage(console.log)
+    }
+</script>
