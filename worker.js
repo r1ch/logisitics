@@ -21,7 +21,8 @@ onmessage = function({data : r}) {
         values[candidate] = true;
         x = next(x);
     }
-
-    postMessage(Object.keys(values).sort());
+    let message = Object.keys(values).sort()
+    message.unshift(r)
+    postMessage(message);
 
 }
