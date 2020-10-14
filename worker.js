@@ -5,7 +5,7 @@ const PRECISION = 1000;
 const map = r => x => r*x*(1-x);
 const round = num => Math.round((num + Number.EPSILON) * PRECISION) / PRECISION;
 
-onmessage = function({message: {data : r}}) {
+onmessage = function({data : r}) {
 
     let next = map(r);
     let x = 0.5;
