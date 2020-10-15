@@ -1,11 +1,11 @@
 const INITIAL = 1000
 const VALUES = 100
-const PRECISION = 1000;
+const PRECISION = 1000000;
 
 const map = r => x => r*x*(1-x);
 const round = num => Math.round((num + Number.EPSILON) * PRECISION) / PRECISION;
 
-onmessage = function({data : r}) {
+onmessage = function({data : [r, domain]}) {
 
     let next = map(r);
     let x = 0.5;
@@ -22,6 +22,7 @@ onmessage = function({data : r}) {
         x = next(x);
     }
     let message = Object.keys(values).sort()
+    message.unshift(domain)
     message.unshift(r)
     postMessage(message);
 
