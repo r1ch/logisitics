@@ -12,85 +12,111 @@
     }
     
     .dot {
-      stroke: #000;
+      stroke: none;
     }
 </style>
     <body>
-    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     
     <script>
+    //Once only set-up
     let margin = {top: 20, right: 20, bottom: 30, left: 40},
         width = 960 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
-    
-    let xValue = function(d) { return d.Calories;}, // data -> value
-        xScale = d3.scale.linear().range([0, width]), // value -> display
-        xMap = function(d) { return xScale(xValue(d));}, // data -> display
-        xAxis = d3.svg.axis().scale(xScale).orient("bottom");
-    
-    // setup y
-    let yValue = function(d) { return d["Protein (g)"];}, // data -> value
-        yScale = d3.scale.linear().range([height, 0]), // value -> display
-        yMap = function(d) { return yScale(yValue(d));}, // data -> display
-        yAxis = d3.svg.axis().scale(yScale).orient("left");
-    
-    // setup fill color
-    let cValue = function(d) { return d.Manufacturer;},
-        color = d3.scale.category10();
-    
-    // add the graph canvas to the body of the webpage
-    let svg = d3.select("body").append("svg")
+
+
+    const svg = d3.select("body").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
-      xScale.domain([0, 4]);
-      yScale.domain([0, 1]);
-    
-      // x-axis
-      svg.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(xAxis)
-        .append("text")
-          .attr("class", "label")
-          .attr("x", width)
-          .attr("y", -6)
-          .style("text-anchor", "end")
-          .text("Stable values");
-    
-      // y-axis
-      svg.append("g")
-          .attr("class", "y axis")
-          .call(yAxis)
-        .append("text")
-          .attr("class", "label")
-          .attr("transform", "rotate(-90)")
-          .attr("y", 6)
-          .attr("dy", ".71em")
-          .style("text-anchor", "end")
-          .text("r");
-    
-    const draw = (message)=>{
-      let data = [...message.data];
-      let r = data.shift();
-      // draw dots
-      svg.selectAll(".dot")
-          .data(data, (d,i)=>`${r}:${i}`)
-          .join(enter => enter.append("circle"))
-          .attr("cx", xScale)
-          .attr("cy", yScale)
-          .attr("r",2)
-          .attr("class", "dot")
+        .attr("viewBox", [0, 0, width, height])
+
+    const drawing = svg
+        .append("g")
+        .attr("transform",`translate(${margin.top},${margin.top})`)
+
+
+    const [minX, maxX, minY, maxY] = [0,4,0,1] 
+    let xScale = d3.scaleLinear().domain([minX,maxX]).range([0,width]),
+        xAxis = d3.axisBottom(xScale),
+        yScale = d3.scaleLinear().domain([minY,maxY]).range([height,0]),
+        yAxis = d3.axisLeft(yScale)
+
+    let fillScale = d3.scaleOrdinal(d3.schemeCategory10)
+
+    const zoom = d3.zoom()
+        .scaleExtent([1, 1000])
+        .on("zoom", zoomed)
+
+    svg.call(zoom);
+
+    function zoomed({transform}) {
+        drawing.attr("transform", transform);
+        //trigger for new domain
+        debouncedFill(transform.rescaleX(xScale).domain())
     }
-    
-   let worker = new Worker("./worker.js")
+
+    const draw = ({data: [r, domain, ...data]})=>{
+        let rScale = xScale(r);
+        let rString = String(r).replace(".","")
+        let dString = String(domain.join("-")).replace(/\./g,"")
+        let fill = fillScale(Math.log2(data.length-1))
+
+        let dotSize = Math.min(1, Math.max(0.00005, (domain[1]-domain[0])/10))
+
+        drawing.selectAll(`.dot:not(.d${dString})`)
+        .remove()
+
+        // draw dots
+        drawing
+            .selectAll(`.r${rString}.d${dString}`)
+            .data(data, (d,i)=>`${r}:${i}:${d}`)
+            .join(
+                enter => enter
+                    .append("circle")
+                    .attr("cx", rScale)
+                    .attr("cy", yScale)
+                    .attr("r",dotSize)
+                    .attr("class", `r${rString} d${dString} dot`)
+                    .attr("fill",fill),
+                update=>update,
+                exit=>exit.remove()
+            );
+
         
-    for(let r = 0; r < 4; r += 0.001){
-        worker.postMessage(r)
-        worker.onmessage = draw
     }
+
+
+    
+    let worker = new Worker("./worker.js")
+    worker.onmessage = draw
+    
+    const rvalues = function*([min,max]){
+            min = Math.max(0,min)
+            max = Math.min(4,max)
+            console.log(min,max)
+            for(let i = min; i < max; i += (max-min)/1000) {
+                yield i 
+            }
+    }
+
+
+    const fillDomain = (domain) =>{
+        for (let r of rvalues(domain)){
+            worker.postMessage([r,domain])
+        }
+    }
+
+    debounce = (f,time)=>{
+        let t
+        return (x)=>{
+            clearTimeout(t)
+            t = setTimeout(()=>f(x),time)
+        }
+    }
+    
+    debouncedFill = debounce(fillDomain,1000)
+    debouncedFill([minX,maxX])
+    
           
     </script>
     </body>
