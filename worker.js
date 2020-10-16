@@ -5,7 +5,7 @@ const PRECISION = 1000000;
 const map = r => x => r*x*(1-x);
 const round = num => Math.round((num + Number.EPSILON) * PRECISION) / PRECISION;
 
-onmessage = function({data : [r, domain]}) {
+onmessage = function({data : [r, domainX, domainY]}) {
 
     let next = map(r);
     let x = 0.5;
@@ -21,8 +21,11 @@ onmessage = function({data : [r, domain]}) {
         values[candidate] = true;
         x = next(x);
     }
-    let message = Object.keys(values).sort()
-    message.unshift(domain)
+    let message = Object
+    .keys(values)
+    .filter(value=>value>domainY[0]&&value<domainY[1])
+    .sort()
+    message.unshift(domainX)
     message.unshift(r)
     postMessage(message);
 
