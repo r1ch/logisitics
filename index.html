@@ -44,7 +44,7 @@
     let fillScale = d3.scaleOrdinal(d3.schemeCategory10)
 
     const zoom = d3.zoom()
-        .scaleExtent([1, 1000])
+        .scaleExtent([1, 10000])
         .on("zoom", zoomed)
 
     svg.call(zoom);
@@ -52,7 +52,10 @@
     function zoomed({transform}) {
         drawing.attr("transform", transform);
         //trigger for new domain
-        debouncedFill(transform.rescaleX(xScale).domain())
+        debouncedFill([
+            transform.rescaleX(xScale).domain(),
+            transform.rescaleY(yScale).domain()
+        ])
     }
 
     const draw = ({data: [r, domain, ...data]})=>{
@@ -61,10 +64,9 @@
         let dString = String(domain.join("-")).replace(/\./g,"")
         let fill = fillScale(Math.log2(data.length-1))
 
-        let dotSize = Math.min(1, Math.max(0.00005, (domain[1]-domain[0])/10))
+        let dotSize = Math.min(1, Math.max(0.00005, (domain[1]-domain[0])/5))
 
-        drawing.selectAll(`.dot:not(.d${dString})`)
-        .remove()
+        debouncedClear(`.dot:not(.d${dString})`)
 
         // draw dots
         drawing
@@ -100,11 +102,13 @@
     }
 
 
-    const fillDomain = (domain) =>{
-        for (let r of rvalues(domain)){
-            worker.postMessage([r,domain])
+    const fillDomain = ([domainX,domainY]) =>{
+        for (let r of rvalues(domainX)){
+            worker.postMessage([r,domainX,domainY])
         }
     }
+
+    const clear = selector => drawing.selectAll(selector).remove()
 
     debounce = (f,time)=>{
         let t
@@ -114,8 +118,10 @@
         }
     }
     
+
+    debouncedClear = debounce(clear,100)
     debouncedFill = debounce(fillDomain,1000)
-    debouncedFill([minX,maxX])
+    debouncedFill([[minX,maxX],[minY,maxY]])
     
           
     </script>
